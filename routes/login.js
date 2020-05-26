@@ -1,26 +1,19 @@
 var express = require('express');
 var mysql = require('mysql');
 var router = express.Router();
-var session = require('express-session');
+var expressJwt = require('express-jwt');
+var jwt = require('jsonwebtoken');
+const secret = 'ABC'; //自定义密钥
+var token = '';
 var option = {
-  // host: 'localhost',
-  host: '119.23.46.237',
+  host: 'localhost',
   user: 'root',
-  password: 'admin',
+  password: '1063706696',
   port: '3306',
-  database: 'video_website',
+  database: 'ehomework',
   connectTimeout: 5000,
   multipleStatements: true //支持执行多条sql语句
 }
-
-// router.use(session({
-//   secret: 'secret',
-//   resave: true,
-//   saveUninitialized: false,
-//   cookie:{
-//       maxAge: 1000 * 60 * 10 //过期时间设置(单位毫秒)
-//   }
-// }));
 
 var connect = mysql.createConnection(option);
 function Result({code = 0, msg = '200', data = {video: null, images: null, article: null}}) {
@@ -29,46 +22,53 @@ function Result({code = 0, msg = '200', data = {video: null, images: null, artic
   this.data = data;
 };
 
-// router.get('/', (req, res) => {
-//   connect.query('SELECT * FROM video limit 0,6; SELECT * FROM images limit 0,6; SELECT * FROM article limit 0,3;', (err, result) => res.json(new Result({
-//     data: {
-//       video: result[0],
-//       images: result[1],
-//       article: result[2]
-//     }
-//   })))
-// })
-
 router.get('/', (req, res) => {
-  res.json({user: 'hahah'})
-});
-
-router.post('/', (req, res) =>{
-  // connect.query('SELECT authorName from author; SELECT password from author;', (err, result) => {
-  //   if((result[0].includes(req.body.username)) && (result[1].includes(req.body.password))) {
-  //     res.json({username: req.body.username, password: req.body.password});
-  //     res.send('登陆成功！')
-  //   } else {
-  //     res.json({username: req.body.username, password: req.body.password});
-  //     res.json('登陆失败')
-  //   }
-  // })
-  if(req.body.username === 'bobo' && req.body.password === '123') {
-    // res.json({username: req.body.username, password: req.body.password});
-    // req.session.regenerate(err => {
-    //   req.session.username = req.body.username
-    // })
-    req.session.username = req.body.username
-    res.json(
-      new Result({
-        data: {
-          username: req.session.username,
-          password: req.body.password
-        }
+  let userName = req.query.userName;
+  let password = req.query.password;
+  let sql = `SELECT * from stuUser where userName='${userName}' and password='${password}';`;
+  console.log('sql: ' + sql);
+  connect.query(sql, (err, data) => {
+    if(err) {
+      throw err;
+    }
+    if(data.length) {
+      console.log('data: ' + data);
+      token = jwt.sign(Object.assign({}, data[0]), secret, {
+        expiresIn: 60 * 60 * 2 //过期时间
       })
-    )
-    console.log(req.session.username)
-  }
+      res.json(new Result({
+        data: data
+      }))
+      console.log('token: ' + token);
+    } else {
+      res.send({code: 1, reason: '请检查用户名或密码'})
+    }
+  })
 });
 
-module.exports = router;
+// router.post('/', (req, res) => {
+//   let userName = req.body.userName;
+//   let password = req.body.password;
+//   let sql = `SELECT * from stuUser where userName='${userName}' and password='${password}';`;
+//   console.log('sql: ' + sql);
+//   connect.query(sql, (err, data) => {
+//     if(err) {
+//       throw err;
+//     }
+//     if(data.length) {
+//       console.log('data: ' + data);
+//       token = jwt.sign(Object.assign({}, data[0]), secret, {
+//         expiresIn: 60 * 60 * 2 //过期时间
+//       })
+//       res.json(new Result({
+//         data: data
+//       }))
+//       console.log('token: ' + token);
+//     } else {
+//       res.send({code: 1, reason: '请检查用户名或密码'})
+//     }
+//   })
+// });
+
+exports.router = router;
+exports.token = token;

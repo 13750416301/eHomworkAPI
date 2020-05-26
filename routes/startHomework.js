@@ -1,8 +1,7 @@
 var express = require('express');
 var mysql = require('mysql');
 var router = express.Router();
-var expressJwt = require('express-jwt');
-
+var token = '';
 var option = {
   host: 'localhost',
   user: 'root',
@@ -19,24 +18,19 @@ function Result({code = 0, msg = '200', data = {}}) {
   this.msg = msg;
   this.data = data;
 };
+
 router.get('/', (req, res) => {
-  // var userName = req.query.userName;
-  // console.log(userName);
-  // if(userName === '') {
-	//   connect.query('SELECT * FROM user;', (err, result) => res.json(new Result({
-	// 	data: result
-	//   })))
-  // } else {
-	//   connect.query('SELECT * FROM user where userName="' + userName + '";', (err, result) => res.json(new Result({
-	// 	data: result
-	//   })))
-  // }
-  connect.query('SELECT * FROM stuUser;', (err, result) => {
-    console.log('error: ' + err);
+  let sql = `UPDATE homeworklist SET status=1 WHERE id=1;`;
+  console.log('sql: ' + sql);
+  connect.query(sql, (err, data) => {
+    if(err) {
+      throw err;
+    }
+    console.log('data: ' + data);
     res.json(new Result({
-      data: result
+      data: data
     }))
   })
-})
+});
 
 module.exports = router;
